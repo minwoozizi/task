@@ -1,14 +1,14 @@
 // 통합 스토어 — localStorage + Supabase 동기화
-const STORE_KEY = 'mapri_store_v2';
+const STORE_KEY = 'mapri_store_v3';
 
 const defaultState = () => ({
-  incentive: [],       // {지사, 센터, 업로드일, 완료}
-  market: [],          // {지사, 날짜, 모델단가, 추가정책, 완료}
-  trend: [],           // {지사, 날짜, S사, L사, K사}
-  uncompleted: [],     // {지사, 센터, 날짜, 무선, 유선전체, 유선신규}
-  insurance: [],       // {지사, 센터, 등록점수, 만기1개월, 만기2개월, 만기, 업데이트}
-  contactM: [],        // {지사, 센터, 접점코드, 접점명, 사번}
-  realtime: [],        // {타입, 본부, 지사, 센터, 날짜, 목표, 실적, 월목표, 월실적}
+  incentive: [],
+  market: [],
+  trend: [],
+  uncompleted: [],
+  insurance: [],
+  contactM: [],
+  realtime: [],
   realtimeConfig: { manager_files: {}, send_mode: true, last_update: null },
 });
 
@@ -25,7 +25,7 @@ const TABLE_MAP = {
 const Store = {
   state: null,
   listeners: new Set(),
-  syncStatus: 'idle', // 'idle' | 'syncing' | 'error' | 'ok'
+  syncStatus: 'idle',
 
   load() {
     try {
@@ -33,7 +33,6 @@ const Store = {
     } catch {
       this.state = defaultState();
     }
-    // 누락 키 보정
     const def = defaultState();
     Object.keys(def).forEach(k => {
       if (this.state[k] === undefined) this.state[k] = def[k];
@@ -54,8 +53,29 @@ const Store = {
     if (!this.state) this.load();
     this.state[key] = value;
     this.save();
-    // 백그라운드 서버 동기화
     this._syncKeyToServer(key);
+  },
+
+  async setKey(key, value) {
+    this.state[key] = value;
+    this.save();
+    const map = TABLE_MAP[key];
+    if (map && window.SupabaseAdapter?.enabled) {
+      await window.SupabaseAdapter.deleteAll(map.table);
+      if (value.length) await window.SupabaseAdapter.upsert(map.table, value.map(r => {
+        const { id, created_at, updated_at, ...rest } = r;
+        return rest;
+      }), map.conflict);
+    }
+  },
+
+  async clearKey(key) {
+    this.state[key] = [];
+    this.save();
+    const map = TABLE_MAP[key];
+    if (map && window.SupabaseAdapter?.enabled) {
+      await window.SupabaseAdapter.deleteAll(map.table);
+    }
   },
 
   async _syncKeyToServer(key) {
@@ -84,29 +104,15 @@ const Store = {
         success = false;
       }
     }
-    // realtime_config
-    const cfg = await window.SupabaseAdapter.fetchAll('realtime_config');
-    if (cfg && cfg[0]) this.state.realtimeConfig = cfg[0];
-
     this.save();
     this.setSyncStatus(success ? 'ok' : 'error');
-    console.log('[Store] initial sync from Supabase complete');
+    console.log('[Store] synced');
     return success;
   },
 
-  setSyncStatus(s) {
-    this.syncStatus = s;
-    this.notify();
-  },
-
-  subscribe(fn) {
-    this.listeners.add(fn);
-    return () => this.listeners.delete(fn);
-  },
-
-  notify() {
-    this.listeners.forEach(fn => fn());
-  },
+  setSyncStatus(s) { this.syncStatus = s; this.notify(); },
+  subscribe(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); },
+  notify() { this.listeners.forEach(fn => fn()); },
 
   async resetAll() {
     this.state = defaultState();
@@ -147,7 +153,6 @@ const Store = {
 
 Store.load();
 
-// Supabase init 후 pull
 window.addEventListener('load', async () => {
   if (window.SupabaseAdapter) {
     SupabaseAdapter.init();

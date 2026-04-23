@@ -1,112 +1,132 @@
-// 보증보험증권 관리
+// 보증보험증권 관리 - 원본 스타일 (색상 범례 + 칩 그리드)
 const InsurancePage = () => {
   const [, force] = useState(0);
   useEffect(() => Store.subscribe(() => force(x => x + 1)), []);
   useEffect(() => Auth.subscribe(() => force(x => x + 1)), []);
 
-  const [filter, setFilter] = useState('');
-  const [searchText, setSearchText] = useState('');
+  const [selected, setSelected] = useState(null); // {branch, center}
   const data = Store.get('insurance') || [];
   const find = (branch, center) => data.find(r => r.지사 === branch && r.센터 === center);
 
-  const update = (branch, center, field, value) => {
-    const run = () => {
-      const existing = find(branch, center);
-      Store.upsertRow('insurance',
-        { 지사: branch, 센터: center },
-        {
-          등록점수: existing?.등록점수 || 0,
-          만기1개월: existing?.만기1개월 || 0,
-          만기2개월: existing?.만기2개월 || 0,
-          만기: existing?.만기 || 0,
-          업데이트: U.todayISO(),
-          [field]: Number(value) || 0,
-        }
-      );
-    };
-    const my = Session.get();
-    if (Auth.isAdmin() || (my && my.branch === branch && my.center === center)) {
-      run();
-    } else {
-      requireAdmin(run);
-    }
+  // 상태 계산 — 색상 범례에 따라
+  const getStatus = (r) => {
+    if (!r || !r.등록점수) return 'gray';        // 미등록
+    if ((r.만기 || 0) > 0) return 'black';        // 만기 도래
+    if ((r.만기1개월 || 0) > 0) return 'red';     // 만기 1개월 이내
+    if ((r.만기2개월 || 0) > 0) return 'yellow';  // 만기 2개월 이내
+    return 'green';                               // 정상
   };
 
-  const branches = filter ? BRANCHES.filter(b => b === filter) : BRANCHES;
-  let rows = branches.flatMap(branch => ORG[branch].map(center => ({
-    branch, center,
-    data: find(branch, center) || { 등록점수: 0, 만기1개월: 0, 만기2개월: 0, 만기: 0, 업데이트: null }
-  })));
+  const statusChipClass = (status) => ({
+    gray: 'chip-gray',
+    black: 'chip', // 만기 도래는 검은색 텍스트
+    red: 'chip-red',
+    yellow: 'chip-yellow',
+    green: 'chip-done',
+  }[status] || '');
 
-  if (searchText) {
-    rows = rows.filter(r => r.center.includes(searchText) || r.branch.includes(searchText));
+  const update = (branch, center, patch) => {
+    const run = () => {
+      const existing = find(branch, center) || { 등록점수: 0, 만기1개월: 0, 만기2개월: 0, 만기: 0 };
+      Store.upsertRow('insurance', { 지사: branch, 센터: center }, {
+        ...existing,
+        ...patch,
+        업데이트: U.todayISO(),
+      });
+    };
+    const my = Session.get();
+    if (Auth.isAdmin() || (my && my.branch === branch && my.center === center)) run();
+    else requireAdmin(run);
+  };
+
+  if (selected) {
+    const r = find(selected.branch, selected.center) || { 등록점수: 0, 만기1개월: 0, 만기2개월: 0, 만기: 0 };
+    return (
+      <div>
+        <div className="page-head">
+          <div className="page-head-title">
+            <h1>{selected.branch} · {selected.center}</h1>
+            <div className="sub">보증보험증권 관리</div>
+          </div>
+          <button className="back-btn" onClick={() => setSelected(null)}>← 뒤로</button>
+        </div>
+
+        <div className="content">
+          <div className="card">
+            <div className="card-head">등록 및 만기 현황</div>
+            <div className="card-body stack-y">
+              {[
+                { key: '등록점수', label: '등록점수', color: '#10b981' },
+                { key: '만기2개월', label: '만기 2개월 이내', color: '#f59e0b' },
+                { key: '만기1개월', label: '만기 1개월 이내', color: '#ef4444' },
+                { key: '만기', label: '만기 도래', color: '#1a2332' },
+              ].map(f => (
+                <div key={f.key}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: f.color }}>{f.label}</label>
+                  <input
+                    type="number" className="input" value={r[f.key] || ''} placeholder="0"
+                    onChange={e => update(selected.branch, selected.center, { [f.key]: Number(e.target.value) || 0 })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {r.업데이트 && (
+            <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--gray-500)', marginTop: 8 }}>
+              마지막 업데이트: {r.업데이트}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
-  const totals = rows.reduce((a, r) => ({
-    등록: a.등록 + r.data.등록점수,
-    만기1: a.만기1 + r.data.만기1개월,
-    만기2: a.만기2 + r.data.만기2개월,
-    만기: a.만기 + r.data.만기,
-  }), { 등록: 0, 만기1: 0, 만기2: 0, 만기: 0 });
-
   return (
-    <div className="stack-y">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">보증보험증권 관리</h1>
-          <p className="page-desc">센터별 등록/만기 현황 관리</p>
+    <div>
+      <div className="page-head">
+        <div className="page-head-title">
+          <h1>보증보험증권 관리</h1>
+          <div className="sub">센터를 선택하세요</div>
         </div>
-        <div className="toolbar">
-          <input type="text" className="input" placeholder="센터명 검색" value={searchText} onChange={e => setSearchText(e.target.value)} style={{ width: 150 }} />
-          <select className="select" value={filter} onChange={e => setFilter(e.target.value)} style={{ width: 130 }}>
-            <option value="">전체 지사</option>
-            {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
-        </div>
+        <button className="back-btn" onClick={() => window.navigate('home')}>← 메인</button>
       </div>
 
-      <div className="grid grid-4">
-        <div className="kpi-card"><div className="kpi-label">등록점수 합계</div><div className="kpi-value">{U.fmtNum(totals.등록)}</div></div>
-        <div className="kpi-card"><div className="kpi-label">만기 1개월내</div><div className="kpi-value" style={{ color: totals.만기1 > 0 ? 'var(--orange)' : undefined }}>{U.fmtNum(totals.만기1)}</div></div>
-        <div className="kpi-card"><div className="kpi-label">만기 2개월내</div><div className="kpi-value" style={{ color: totals.만기2 > 0 ? 'var(--orange)' : undefined }}>{U.fmtNum(totals.만기2)}</div></div>
-        <div className="kpi-card"><div className="kpi-label">만기 도래</div><div className="kpi-value" style={{ color: totals.만기 > 0 ? 'var(--red)' : undefined }}>{U.fmtNum(totals.만기)}</div></div>
+      <div style={{ padding: '10px 14px', background: '#fff', borderBottom: '1px solid var(--border)' }}>
+        <div className="legend">
+          <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--red)' }}></span>만기 1개월 이내</span>
+          <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--yellow)' }}></span>만기 2개월 이내</span>
+          <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--green)' }}></span>정상</span>
+          <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--navy)' }}></span>만기</span>
+          <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--gray-200)', border: '1px solid var(--gray-300)' }}></span>미등록</span>
+        </div>
+        <div style={{ fontSize: 10, color: 'var(--gray-500)' }}>· 버튼 숫자: 등록점수 / 만기도래점수</div>
       </div>
 
-      <div className="card">
-        <div className="table-wrap">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>지사</th>
-                <th>센터</th>
-                <th>등록점수</th>
-                <th>만기 1개월</th>
-                <th>만기 2개월</th>
-                <th>만기 도래</th>
-                <th>업데이트</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ branch, center, data: r }) => {
-                const state = r.만기 > 0 ? 'danger' : (r.만기1개월 > 0 || r.만기2개월 > 0 ? 'warn' : 'ok');
+      <div className="content">
+        {BRANCHES.map(branch => (
+          <div key={branch} className="center-group">
+            <div className="center-group-title">{branch.replace('지사', '')}</div>
+            <div className="chip-grid">
+              {ORG[branch].map(center => {
+                const r = find(branch, center);
+                const status = getStatus(r);
                 return (
-                  <tr key={branch + center}>
-                    <td>{branch}</td>
-                    <td>
-                      <span className={`status-${state}`} style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 50, background: 'currentColor', marginRight: 6 }}></span>
-                      {center}
-                    </td>
-                    <td><input type="number" className="input" value={r.등록점수 || ''} onChange={e => update(branch, center, '등록점수', e.target.value)} placeholder="0" style={{ textAlign: 'right', width: 100 }} /></td>
-                    <td><input type="number" className="input" value={r.만기1개월 || ''} onChange={e => update(branch, center, '만기1개월', e.target.value)} placeholder="0" style={{ textAlign: 'right', width: 100 }} /></td>
-                    <td><input type="number" className="input" value={r.만기2개월 || ''} onChange={e => update(branch, center, '만기2개월', e.target.value)} placeholder="0" style={{ textAlign: 'right', width: 100 }} /></td>
-                    <td><input type="number" className="input" value={r.만기 || ''} onChange={e => update(branch, center, '만기', e.target.value)} placeholder="0" style={{ textAlign: 'right', width: 100 }} /></td>
-                    <td style={{ color: 'var(--gray-500)', fontSize: 12 }}>{r.업데이트 ? U.fmtDate(r.업데이트) : '-'}</td>
-                  </tr>
+                  <button
+                    key={center}
+                    className={`chip ${statusChipClass(status)}`}
+                    onClick={() => setSelected({ branch, center })}
+                  >
+                    <div className="chip-name">{center}</div>
+                    <div className="chip-sub">
+                      {r?.등록점수 ? `${r.등록점수} / ${r.만기 || 0}` : '미등록 / 0'}
+                    </div>
+                  </button>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
