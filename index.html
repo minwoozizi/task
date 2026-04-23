@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a2a4a">
+  <title>도매채널 영업관리 포털</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='4' fill='%231a2a4a'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='%23fff' font-size='13' font-weight='700' font-family='sans-serif'%3EM%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 순수 JS 유틸 -->
+  <script src="src/org.js"></script>
+  <script src="src/auth.js"></script>
+  <script src="src/session.js"></script>
+  <script src="src/utils.js"></script>
+  <script src="src/supabase-adapter.js"></script>
+  <script src="src/store.js"></script>
+
+  <!-- React -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- JSX 컴포넌트 -->
+  <script type="text/babel" src="src/common.jsx"></script>
+  <script type="text/babel" src="src/pages/Home.jsx"></script>
+  <script type="text/babel" src="src/pages/Incentive.jsx"></script>
+  <script type="text/babel" src="src/pages/MarketReport.jsx"></script>
+  <script type="text/babel" src="src/pages/Uncompleted.jsx"></script>
+  <script type="text/babel" src="src/pages/Insurance.jsx"></script>
+  <script type="text/babel" src="src/pages/ContactM.jsx"></script>
+  <script type="text/babel" src="src/pages/Realtime.jsx"></script>
+  <script type="text/babel" src="src/pages/Settings.jsx"></script>
+  <script type="text/babel" src="src/App.jsx"></script>
+<script data-designer2-injected>
+/**
+ * Designer 2.0 — iframe inject script.
+ *
+ * Injected by the backend into every HTML file served from the preview endpoint.
+ * Provides: console forwarding, error capture, height reporting,
+ * remote JS eval, window.claude.complete() (Haiku callback),
+ * Design Mode (element selection + data-cc-id), Tweaks protocol,
+ * Babel JSX auto-config, and escape key forwarding.
+ */
+(function () {
+  var P = window.parent;
+  if (!P || P === window) return;
+
+  // ── Origin verification ────────────────────────────────────────────
+  var ALLOWED_ORIGINS = [
+    location.origin,
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://www.genspark.ai',
+    'https://genspark.ai',
+    'https://www.coswift.ai',
+    'https://coswift.ai',
+  ];
+
+  function isAllowedOrigin(origin) {
+    if (!origin) return true;
+    for (var i = 0; i < ALLOWED_ORIGINS.length; i++) {
+      if (origin === ALLOWED_ORIGINS[i]) return true;
+    }
+    return origin.endsWith('.genspark.ai') || origin.endsWith('.coswift.ai') || origin.endsWith('.genspark.site');
+  }
+
+  // ── Console forwarding ──────────────────────────────────────────────
+  ['log', 'warn', 'error'].forEach(function (k) {
+    var orig = console[k];
+    console[k] = function () {
+      var msg = Array.prototype.slice
+        .call(arguments)
+        .map(function (a) {
+          try {
+            return typeof a === 'object' ? JSON.stringify(a) : String(a);
+          } catch (e) {
+            return '[unstringifiable]';
+          }
+        })
+        .join(' ');
+      try {
+        P.postMessage({ __designer2_log: true, type: k, data: msg }, '*');
+      } catch (e) {}
+      orig.apply(console, arguments);
+    };
+  });
+
+  // ── Global error forwarding ─────────────────────────────────────────
+  window.addEventListener(
+    'error',
+    function (e) {
+      var t = e.target;
+      if (t && t !== window && t.tagName) {
+        P.postMessage(
+          {
+            __designer2_log: true,
+            type: 'resource_error',
+            data: t.tagName + ' failed to load: ' + (t.src || t.href || ''),
+          },
+          '*'
+        );
+      } else {
+        P.postMessage(
+          {
+            __designer2_log: true,
+            type: 'error',
+            data:
+              (e.message || 'Error') +
+              ' at ' +
+              (e.filename || '?') +
+              ':' +
+              (e.lineno || 0),
+          },
+          '*'
+        );
+      }
+    },
+    true
+  );
+
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason;
+    var msg = r instanceof Error ? r.message + ' ' + r.stack : String(r);
+    P.postMessage(
+      { __designer2_log: true, type: 'error', data: 'Unhandled rejection: ' + msg },
+      '*'
+    );
+  });
+
+  // ── Height reporting ────────────────────────────────────────────────
+  function reportHeight() {
+    try {
+      P.postMessage(
+        { type: 'designer2:height', height: document.documentElement.scrollHeight },
+        '*'
+      );
+    } catch (e) {}
+  }
+  if (document.readyState === 'complete') reportHeight();
+  else window.addEventListener('load', reportHeight);
+  if (window.ResizeObserver)
+    new ResizeObserver(reportHeight).observe(document.documentElement);
+
+  // ── Escape key forwarding ───────────────────────────────────────────
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      P.postMessage({ type: 'escape-pressed' }, '*');
+    }
+  });
+
+  // ── Remote JS eval (__d2_eval) ──────────────────────────────────────
+  // ── window.claude.complete() responses (__d2_api_r) ─────────────────
+  // ── Tweaks activation (__activate_edit_mode / __deactivate_edit_mode)
+  window.addEventListener('message', function (e) {
+    if (!e.data) return;
+    if (!isAllowedOrigin(e.origin)) return;
+
+    // Remote eval
+    if (e.data.__d2_eval) {
+      var evalId = e.data.id;
+      function respond(payload) {
+        e.source.postMessage(
+          Object.assign(payload, { __d2_eval_r: 1, id: evalId }),
+          e.origin === 'null' ? '*' : e.origin
+        );
+      }
+      try {
+        var result = eval(e.data.code);
+        if (result && typeof result.then === 'function') {
+          result.then(
+            function (v) { respond({ ok: 1, v: JSON.stringify(v) }); },
+            function (err) { respond({ ok: 0, e: String(err) }); }
+          );
+        } else {
+          respond({ ok: 1, v: JSON.stringify(result) });
+        }
+      } catch (err) {
+        respond({ ok: 0, e: String(err) });
+      }
+      return;
+    }
+
+    // Claude API responses (streaming)
+    if (e.data.__d2_api_r) {
+      var req = _d2_pending[e.data.id];
+      if (!req) return;
+      if (e.data.error != null) {
+        clearTimeout(req.t);
+        delete _d2_pending[e.data.id];
+        req.reject(new Error(e.data.error));
+      } else if (e.data.chunk != null) {
+        clearTimeout(req.t);
+        req.t = req.arm();
+        req.text += e.data.chunk;
+      } else if (e.data.done) {
+        clearTimeout(req.t);
+        delete _d2_pending[e.data.id];
+        req.resolve(e.data.text != null ? e.data.text : req.text);
+      }
+      return;
+    }
+
+    // Tweaks activation / deactivation
+    if (e.data.type === '__activate_edit_mode') {
+      _tweaksActive = true;
+      window.dispatchEvent(new CustomEvent('designer2:tweaks-activate'));
+      return;
+    }
+    if (e.data.type === '__deactivate_edit_mode') {
+      _tweaksActive = false;
+      window.dispatchEvent(new CustomEvent('designer2:tweaks-deactivate'));
+      return;
+    }
+
+    // Tweaks value updates from host
+    if (e.data.type === '__edit_mode_set_keys' && e.data.edits) {
+      window.dispatchEvent(
+        new CustomEvent('designer2:tweaks-update', { detail: e.data.edits })
+      );
+      return;
+    }
+
+    // Screenshot capture
+    if (e.data.type === '__d2_screenshot') {
+      _captureScreenshot(e.data.id);
+      return;
+    }
+
+    // Speaker notes request
+    if (e.data.type === '__d2_get_speaker_notes') {
+      _sendSpeakerNotes();
+      return;
+    }
+
+    // Probe edit mode — relay to the page so LLM-generated code can respond.
+    // Only the page itself knows if it implemented the tweaks protocol; the
+    // inject script must NOT reply unconditionally.
+    if (e.data.type === '__probe_edit_mode') {
+      window.dispatchEvent(new CustomEvent('designer2:probe-edit-mode'));
+      return;
+    }
+
+    // Design Mode activation
+    if (e.data.type === '__DESIGNER_ACTIVATE') { _dmActive = true; return; }
+    if (e.data.type === '__DESIGNER_DEACTIVATE') { _dmActive = false; return; }
+  });
+
+  // ── window.claude.complete() ────────────────────────────────────────
+  var _d2_pending = {};
+  var _d2_seq = 0;
+  var _d2_timeout = 30000;
+  var _tweaksActive = false;
+
+  window.claude = {
+    complete: function (body) {
+      return new Promise(function (resolve, reject) {
+        var id = 'd2_' + ++_d2_seq;
+        var arm = function () {
+          return setTimeout(function () {
+            delete _d2_pending[id];
+            reject(new Error('claude.complete: timeout after ' + _d2_timeout / 1000 + 's'));
+          }, _d2_timeout);
+        };
+        var timer = arm();
+        _d2_pending[id] = { resolve: resolve, reject: reject, text: '', t: timer, arm: arm };
+        try {
+          P.postMessage({ __d2_api: true, id: id, body: body }, '*');
+        } catch (err) {
+          clearTimeout(timer);
+          delete _d2_pending[id];
+          reject(err);
+        }
+      });
+    },
+  };
+
+  // ── Screenshot capture ──────────────────────────────────────────────
+  var _html2canvasLoaded = false;
+  var _html2canvasLoading = false;
+
+  var _html2canvasLoadError = null;
+
+  function _loadHtml2Canvas(cb) {
+    if (_html2canvasLoaded && window.html2canvas) { cb(); return; }
+    if (_html2canvasLoadError) { cb(_html2canvasLoadError); return; }
+    if (_html2canvasLoading) {
+      var check = setInterval(function () {
+        if (_html2canvasLoaded) { clearInterval(check); cb(); }
+        else if (_html2canvasLoadError) { clearInterval(check); cb(_html2canvasLoadError); }
+      }, 100);
+      return;
+    }
+    _html2canvasLoading = true;
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = function () { _html2canvasLoaded = true; _html2canvasLoading = false; cb(); };
+    s.onerror = function () {
+      _html2canvasLoadError = new Error('Failed to load html2canvas');
+      _html2canvasLoading = false;
+      cb(_html2canvasLoadError);
+    };
+    document.head.appendChild(s);
+  }
+
+  function _captureScreenshot(requestId) {
+    _loadHtml2Canvas(function (err) {
+      if (err) {
+        P.postMessage({ type: '__d2_screenshot_result', id: requestId, error: err.message }, '*');
+        return;
+      }
+      try {
+        window.html2canvas(document.body, {
+          useCORS: true,
+          allowTaint: true,
+          scale: window.devicePixelRatio || 1,
+          logging: false,
+        }).then(function (canvas) {
+          var dataUrl = canvas.toDataURL('image/png');
+          P.postMessage({ type: '__d2_screenshot_result', id: requestId, data: dataUrl }, '*');
+        }).catch(function (captureErr) {
+          P.postMessage({ type: '__d2_screenshot_result', id: requestId, error: String(captureErr) }, '*');
+        });
+      } catch (syncErr) {
+        P.postMessage({ type: '__d2_screenshot_result', id: requestId, error: String(syncErr) }, '*');
+      }
+    });
+  }
+
+  // ── Speaker Notes ────────────────────────────────────────────────────
+  // Extract notes from <script type="application/json" id="speaker-notes">
+  // and forward slideIndexChanged events to the parent.
+  function _sendSpeakerNotes() {
+    var notesEl = document.getElementById('speaker-notes');
+    var notes = [];
+    if (notesEl) {
+      try {
+        var parsed = JSON.parse(notesEl.textContent);
+        if (Array.isArray(parsed)) notes = parsed;
+      } catch (e) { /* ignore parse errors */ }
+    }
+    P.postMessage({ speakerNotes: notes }, '*');
+  }
+
+  // Forward slideIndexChanged from slide decks (e.g. Reveal.js)
+  // so the parent SpeakerNotes panel can track the current slide.
+  window.addEventListener('message', function (e) {
+    if (e.data && typeof e.data.slideIndexChanged === 'number' && e.source === window) {
+      P.postMessage({ slideIndexChanged: e.data.slideIndexChanged }, '*');
+    }
+  });
+
+  // Also listen for Reveal.js-style events directly
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.Reveal) {
+      try {
+        window.Reveal.on('slidechanged', function (ev) {
+          var idx = ev.indexh != null ? ev.indexh : 0;
+          P.postMessage({ slideIndexChanged: idx }, '*');
+        });
+      } catch (e) { /* ignore */ }
+    }
+  });
+
+  // ── Design Mode ─────────────────────────────────────────────────────
+  var _ccSeq = 1;
+  var _dmActive = false;
+
+  function ccStamp(el) {
+    if (!el.getAttribute('data-cc-id')) {
+      el.setAttribute('data-cc-id', 'cc-' + _ccSeq++);
+    }
+    return el.getAttribute('data-cc-id');
+  }
+
+  function domAncestry(el, limit) {
+    var chain = [];
+    var cur = el;
+    for (var i = 0; i < (limit || 6) && cur && cur !== document.body; i++) {
+      var tag = cur.tagName.toLowerCase();
+      var elId = cur.id ? '#' + cur.id : '';
+      var cls =
+        cur.className && typeof cur.className === 'string'
+          ? '.' + cur.className.split(' ').slice(0, 2).join('.')
+          : '';
+      var label = cur.getAttribute('data-screen-label');
+      var labelStr = label ? '[' + label + ']' : '';
+      chain.push(tag + elId + cls + labelStr);
+      cur = cur.parentElement;
+    }
+    return chain.join(' > ');
+  }
+
+  document.addEventListener(
+    'click',
+    function (ev) {
+      if (!_dmActive) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var el = ev.target;
+      P.postMessage(
+        {
+          type: '__DESIGNER_ELEMENT_SELECTED__',
+          data: {
+            ccId: ccStamp(el),
+            dom: domAncestry(el),
+            tag: el.tagName.toLowerCase(),
+            text: (el.textContent || '').slice(0, 80).trim(),
+            rect: el.getBoundingClientRect().toJSON(),
+          },
+        },
+        '*'
+      );
+    },
+    true
+  );
+
+  document.addEventListener(
+    'mouseover',
+    function (ev) {
+      if (!_dmActive) return;
+      var el = ev.target;
+      ccStamp(el);
+      P.postMessage(
+        {
+          type: '__DESIGNER_ELEMENT_HOVERED__',
+          data: {
+            ccId: el.getAttribute('data-cc-id'),
+            dom: domAncestry(el),
+            rect: el.getBoundingClientRect().toJSON(),
+          },
+        },
+        '*'
+      );
+    },
+    true
+  );
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Edit / Knobs mode
+  //
+  // Mirrors Claude Design's "Edit" button flow (captured via CDP on
+  // claude.ai/design): click an element → right-side host panel renders
+  // Typography / Size / Box (and Layout / Image when applicable) sections;
+  // user drags a value → __knobsApply mutates inline style; on exit the host
+  // calls __knobsGetAllChanged to build a natural-language "Apply N direct
+  // edits" prompt sent to the LLM.
+  //
+  // Text editing is a sub-case: clicking a text element also flips it to
+  // contenteditable with the same purple outline, so users can type directly
+  // and that edit is committed alongside the style changes.
+  // ══════════════════════════════════════════════════════════════════════
+
+  var _editActive = false;
+  // Saved body cursor value from before __enterEditMode overwrote it with
+  // 'crosshair'. Restored on __exitEditMode so any pre-existing inline
+  // cursor (e.g. source has <body style="cursor:pointer">) isn't lost.
+  var _editOriginalBodyCursor = null;
+  // Array of {el, selector} so host can render the selected element's
+  // context panel. Kept as an array to leave room for future multi-select
+  // parity with Claude Design (our MVP only ever has one entry).
+  var _editSelected = [];
+  // Runtime overlays and their state.
+  var _editHoverOverlay = null;
+  var _editSelectedOverlay = null;
+  // Text-edit sub-state (set when the selected element is a text node).
+  var _editTextCurrentEl = null;
+  var _editTextOriginalText = null;
+  var _editTextOriginalCE = null;
+  var _editTextOriginalOutline = null;
+  var _editTextOriginalOutlineOffset = null;
+  // Accumulated text-edit changes across the whole session. When the
+  // user edits text on element A then clicks B, A's change must be
+  // captured here before _editFinishTextEdit nulls _editTextCurrentEl,
+  // otherwise it's silently dropped from the exit prompt.
+  var _editTextChanges = [];
+  // Saved cssText baseline for Discard / diff. Each entry: {el, cssText, written}.
+  // written is nulled until __knobsMarkWritten flips it to the latest on-disk
+  // value, so the next __knobsGetAllChanged diff is relative to disk.
+  var _knobsSaved = [];
+
+  function _editCreateOverlay(color) {
+    var d = document.createElement('div');
+    d.style.cssText =
+      'position:fixed;pointer-events:none;border:2px solid ' + color +
+      ';border-radius:4px;z-index:99999;transition:all 0.1s ease;display:none;';
+    d.setAttribute('data-designer2-overlay', '1');
+    document.body.appendChild(d);
+    return d;
+  }
+
+  function _editPositionOverlay(overlay, el) {
+    var r = el.getBoundingClientRect();
+    overlay.style.left = (r.left - 2) + 'px';
+    overlay.style.top = (r.top - 2) + 'px';
+    overlay.style.width = (r.width + 4) + 'px';
+    overlay.style.height = (r.height + 4) + 'px';
+    overlay.style.display = 'block';
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────
+  function _editIsTextElement(el) {
+    if (!el || el === document.body || el === document.documentElement) return false;
+    if (el.namespaceURI && el.namespaceURI.indexOf('svg') >= 0) return false;
+    var t = (el.innerText || el.textContent || '').trim();
+    if (!t) return false;
+    // Direct-text node OR leaf element with text.
+    for (var i = 0; i < el.childNodes.length; i++) {
+      var n = el.childNodes[i];
+      if (n.nodeType === 3 && n.textContent.trim().length > 0) return true;
+    }
+    return el.children.length === 0;
+  }
+
+  function _editFallbackSelector(el) {
+    if (el.id) {
+      try {
+        var idSel = '#' + (window.CSS && CSS.escape ? CSS.escape(el.id) : el.id);
+        if (document.querySelectorAll(idSel).length === 1) return idSel;
+      } catch (e) {}
+    }
+    if (el === document.body) return 'body';
+    var parent = el.parentNode;
+    if (!parent || parent.nodeType !== 1) return el.tagName.toLowerCase();
+    var siblings = Array.prototype.slice.call(parent.children);
+    var index = siblings.indexOf(el);
+    return _editFallbackSelector(parent) + ' > ' + el.tagName.toLowerCase()
+      + ':nth-child(' + (index + 1) + ')';
+  }
+
+  function _editPickSelector(el) {
+    // Never use data-cc-id here. cc-id is a runtime handle stamped by
+    // Design Mode and stripped by __serializeDocument, so it's not
+    // present in saved HTML / source files. The LLM couldn't resolve it.
+    // A structural CSS path (id if unique, else nth-child chain from body)
+    // is what survives the round-trip.
+    return _editFallbackSelector(el);
+  }
+
+  // ── Context for host panel ──────────────────────────────────────────
+  var _editStyleProps = [
+    'display', 'position', 'width', 'height',
+    'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
+    'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+    'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
+    'borderWidth', 'borderStyle', 'borderColor', 'borderRadius',
+    'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+    'borderTopLeftRadius', 'borderTopRightRadius',
+    'borderBottomRightRadius', 'borderBottomLeftRadius',
+    'backgroundColor', 'backgroundImage', 'backgroundSize',
+    'backgroundPosition', 'objectFit',
+    'color', 'fontSize', 'fontWeight', 'fontFamily',
+    'lineHeight', 'letterSpacing', 'textAlign', 'textDecoration', 'textTransform',
+    'gap', 'flexDirection', 'justifyContent', 'alignItems', 'flexWrap',
+    'opacity', 'overflow', 'boxShadow', 'transform',
+    'gridTemplateColumns', 'gridTemplateRows',
+    'fill', 'stroke', 'strokeWidth',
+  ];
+
+  // Diff computed styles against a fresh element of the same tag; returns
+  // only the props that differ. Don't set inline style on the temp —
+  // `position` is in the list and would skew the baseline.
+  //
+  // CSSStyleDeclaration is live — if we read `comp[p]` AFTER appending the
+  // temp element, structural pseudo-class selectors (e.g. :last-child,
+  // :nth-child) relative to body would return values that reflect the
+  // post-mutation state. Snapshot the node's props first into a plain
+  // object, THEN append the temp.
+  function _editNonDefaultStyles(node) {
+    var compLive = window.getComputedStyle(node);
+    var compSnap = {};
+    for (var si = 0; si < _editStyleProps.length; si++) {
+      compSnap[_editStyleProps[si]] = compLive[_editStyleProps[si]];
+    }
+    var temp = document.createElement(node.tagName);
+    temp.style.cssText = 'visibility:hidden;pointer-events:none;';
+    document.body.appendChild(temp);
+    var def = window.getComputedStyle(temp);
+    var out = {};
+    for (var i = 0; i < _editStyleProps.length; i++) {
+      var p = _editStyleProps[i];
+      var v = compSnap[p];
+      if (v && v !== def[p]) out[p] = v;
+    }
+    temp.remove();
+    return out;
+  }
+
+  function _editRectOf(node) {
+    var r = node.getBoundingClientRect();
+    return {
+      x: Math.round(r.left),
+      y: Math.round(r.top),
+      w: Math.round(r.width),
+      h: Math.round(r.height),
+    };
+  }
+
+  window.__knobsGetContext = function () {
+    return JSON.stringify(_editSelected.map(function (s) {
+      var el = s.el;
+      var styles = _editNonDefaultStyles(el);
+      var cs = window.getComputedStyle(el);
+      // Inherited props get zero-diff'd out; backfill from computed so the
+      // panel always has concrete values to render.
+      if (!styles.color && cs.color) styles.color = cs.color;
+      if (!styles.fontFamily && cs.fontFamily) styles.fontFamily = cs.fontFamily;
+      if (!styles.fontSize && cs.fontSize) styles.fontSize = cs.fontSize;
+      if (el === document.body) {
+        var directBg = cs.backgroundColor;
+        if (directBg && directBg !== 'rgba(0, 0, 0, 0)') {
+          styles.backgroundColor = directBg;
+        }
+      }
+      var attrs = {};
+      for (var i = 0; i < el.attributes.length; i++) {
+        var a = el.attributes[i];
+        if (a.name !== 'style') {
+          attrs[a.name] = (a.value || '').slice(0, 200);
+        }
+      }
+      return {
+        selector: s.selector,
+        tag: el.tagName.toLowerCase(),
+        attrs: attrs,
+        styles: styles,
+        inlineStyle: (el.getAttribute('style') || '').slice(0, 400),
+        rect: _editRectOf(el),
+        innerHTML: el.innerHTML.slice(0, 1000),
+        isText: _editIsTextElement(el),
+      };
+    }));
+  };
+
+  // Save cssText for selected + ancestors up to 4 deep so Discard can
+  // revert nested applyFn changes too (e.g. Size knob walks up to set
+  // parent width). APPENDS entries rather than replacing: reselecting
+  // must preserve earlier elements' baselines so their diffs survive
+  // into __knobsGetAllChanged when the user exits after touching
+  // multiple elements.
+  function _knobsAlreadySaved(el) {
+    for (var i = 0; i < _knobsSaved.length; i++) {
+      if (_knobsSaved[i].el === el) return true;
+    }
+    return false;
+  }
+  window.__knobsSaveState = function () {
+    _editSelected.forEach(function (s) {
+      if (!_knobsAlreadySaved(s.el)) {
+        _knobsSaved.push({ el: s.el, cssText: s.el.style.cssText });
+      }
+      var cur = s.el.parentElement;
+      for (var i = 0; i < 4 && cur && cur !== document.body; i++) {
+        if (!_knobsAlreadySaved(cur)) {
+          _knobsSaved.push({ el: cur, cssText: cur.style.cssText });
+        }
+        cur = cur.parentElement;
+      }
+    });
+  };
+
+  window.__knobsRestoreState = function () {
+    _knobsSaved.forEach(function (s) { s.el.style.cssText = s.cssText; });
+    _knobsSaved = [];
+  };
+
+  function _knobsParseCss(t) {
+    var m = {};
+    (t || '').split(';').forEach(function (d) {
+      var c = d.indexOf(':');
+      if (c < 0) return;
+      var k = d.slice(0, c).trim();
+      var v = d.slice(c + 1).trim();
+      if (k && v) m[k] = v;
+    });
+    return m;
+  }
+
+  // Returns [{selector, cssText}] — inline-style diffs since selection or
+  // since last __knobsMarkWritten. Skips text-edit chrome props so the
+  // outline/offset never surface as a user edit. body IS included —
+  // LLMs can find `body` in the source and apply inline style there.
+  //
+  // Detects added, modified, AND removed properties: iterating only
+  // `after` would miss deletions (baseline had a key, user cleared it).
+  // Removed props are reported as `k: initial` so the LLM knows to
+  // delete the rule from the source.
+  window.__knobsGetAllChanged = function () {
+    var out = [];
+    _knobsSaved.forEach(function (s) {
+      var base = s.written != null ? s.written : s.cssText;
+      var before = _knobsParseCss(base);
+      var after = _knobsParseCss(s.el.style.cssText);
+      var parts = [];
+      var seen = {};
+      for (var k in after) {
+        seen[k] = true;
+        if (k === 'outline' || k === 'outline-offset') continue;
+        if (after[k] !== before[k]) parts.push(k + ': ' + after[k]);
+      }
+      for (var k2 in before) {
+        if (seen[k2]) continue;
+        if (k2 === 'outline' || k2 === 'outline-offset') continue;
+        parts.push(k2 + ': initial');
+      }
+      if (!parts.length) return;
+      out.push({
+        selector: _editPickSelector(s.el),
+        cssText: parts.join('; '),
+      });
+    });
+    return JSON.stringify(out);
+  };
+
+  window.__knobsMarkWritten = function () {
+    _knobsSaved.forEach(function (s) { s.written = s.el.style.cssText; });
+  };
+
+  // Host eval path: `new Function('return ' + applyFnStr)()` compiles the
+  // section's applyFn source and we call it with the parsed props against
+  // each currently-selected element.
+  window.__knobsApply = function (applyFnStr, propsJson) {
+    try {
+      var props = JSON.parse(propsJson);
+      var fn = new Function('return ' + applyFnStr)();
+      _editSelected.forEach(function (s) { fn(props, s.el); });
+    } catch (e) {
+      console.error('[designer2] knobs apply error:', e);
+    }
+  };
+
+  window.__knobsSelectBody = function () {
+    if (_editSelectedOverlay) _editSelectedOverlay.style.display = 'none';
+    _editFinishTextEdit();
+    _editSelected = [{ el: document.body, selector: 'body' }];
+    _editEmitSelection(document.body, 'body', false);
+    window.__knobsSaveState();
+  };
+
+  // ── Text-edit sub-state ──────────────────────────────────────────────
+  function _editFinishTextEdit() {
+    var el = _editTextCurrentEl;
+    if (!el) return;
+    // Commit the change to the session accumulator BEFORE we null state,
+    // so subsequent clicks on other text elements don't drop this edit.
+    try {
+      var now = el.innerText || el.textContent || '';
+      if (_editTextOriginalText != null && now !== _editTextOriginalText) {
+        _editTextChanges.push({
+          selector: _editPickSelector(el),
+          originalText: _editTextOriginalText,
+          newText: now,
+        });
+      }
+    } catch (e) {}
+    try {
+      if (_editTextOriginalCE == null) el.removeAttribute('contenteditable');
+      else el.setAttribute('contenteditable', _editTextOriginalCE);
+      el.style.outline = _editTextOriginalOutline || '';
+      el.style.outlineOffset = _editTextOriginalOutlineOffset || '';
+    } catch (e) {}
+    _editTextCurrentEl = null;
+    _editTextOriginalText = null;
+    _editTextOriginalCE = null;
+    _editTextOriginalOutline = null;
+    _editTextOriginalOutlineOffset = null;
+  }
+
+  function _editBeginTextEdit(el) {
+    _editFinishTextEdit();
+    _editTextCurrentEl = el;
+    _editTextOriginalText = el.innerText || el.textContent || '';
+    _editTextOriginalCE = el.hasAttribute('contenteditable')
+      ? el.getAttribute('contenteditable')
+      : null;
+    _editTextOriginalOutline = el.style.outline;
+    _editTextOriginalOutlineOffset = el.style.outlineOffset;
+    el.setAttribute('contenteditable', 'true');
+    el.style.outline = '2px solid #8B5CF6';
+    el.style.outlineOffset = '2px';
+    try { el.focus(); } catch (e) {}
+  }
+
+  // Emit a selection-changed signal to host via postMessage. Host reacts
+  // by calling __knobsGetContext and rendering the right-side panel.
+  function _editEmitSelection(el, selector, isText) {
+    try {
+      P.postMessage({
+        type: '__DESIGNER_KNOBS_SELECTED__',
+        data: {
+          selector: selector,
+          tag: el.tagName.toLowerCase(),
+          rect: _editRectOf(el),
+          isText: isText,
+          originalText: isText ? _editTextOriginalText : null,
+        },
+      }, '*');
+    } catch (e) {}
+  }
+
+  // ── Event wiring ─────────────────────────────────────────────────────
+  document.addEventListener('mousemove', function (e) {
+    if (!_editActive || !_editHoverOverlay) return;
+    var el = null;
+    try {
+      if (document.elementFromPoint) {
+        el = document.elementFromPoint(e.clientX, e.clientY);
+      }
+    } catch (err) {}
+    if (!el || el === document.body || el === document.documentElement) {
+      _editHoverOverlay.style.display = 'none';
+      return;
+    }
+    // Don't double-highlight the currently-selected element.
+    if (_editSelected.some(function (s) { return s.el === el; })) {
+      _editHoverOverlay.style.display = 'none';
+      return;
+    }
+    _editPositionOverlay(_editHoverOverlay, el);
+  });
+
+  document.addEventListener('mouseleave', function () {
+    if (!_editActive || !_editHoverOverlay) return;
+    _editHoverOverlay.style.display = 'none';
+  });
+
+  document.addEventListener('click', function (ev) {
+    if (!_editActive) return;
+    // Click inside the text-editing element: let the browser handle caret
+    // placement / text selection naturally.
+    if (_editTextCurrentEl && (ev.target === _editTextCurrentEl
+        || _editTextCurrentEl.contains(ev.target))) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (_editHoverOverlay) _editHoverOverlay.style.display = 'none';
+    _editFinishTextEdit();
+
+    var el = null;
+    try {
+      if (document.elementFromPoint) {
+        el = document.elementFromPoint(ev.clientX, ev.clientY);
+      }
+    } catch (err) {}
+    if (!el) el = ev.target;
+    if (!el || el === document.body || el === document.documentElement) {
+      if (_editSelectedOverlay) _editSelectedOverlay.style.display = 'none';
+      return;
+    }
+
+    var selector = _editPickSelector(el);
+    _editSelected = [{ el: el, selector: selector }];
+    window.__knobsSaveState();
+
+    var isText = _editIsTextElement(el);
+    if (isText) {
+      // Text-edit sub-case: element becomes contenteditable with outline-on-element;
+      // the selected overlay hides because the element's own outline is the
+      // selection affordance.
+      if (_editSelectedOverlay) _editSelectedOverlay.style.display = 'none';
+      _editBeginTextEdit(el);
+    } else {
+      if (!_editSelectedOverlay) _editSelectedOverlay = _editCreateOverlay('#8B5CF6');
+      _editPositionOverlay(_editSelectedOverlay, el);
+    }
+    _editEmitSelection(el, selector, isText);
+  }, true);
+
+  // ── Public mode-toggle API ───────────────────────────────────────────
+  window.__enterEditMode = function () {
+    _editActive = true;
+    _editOriginalBodyCursor = document.body.style.cursor;
+    document.body.style.cursor = 'crosshair';
+    if (!_editHoverOverlay) _editHoverOverlay = _editCreateOverlay('#10B981');
+    if (!_editSelectedOverlay) _editSelectedOverlay = _editCreateOverlay('#8B5CF6');
+    _editSelected = [];
+    _knobsSaved = [];
+    _editTextChanges = [];
+  };
+
+  window.__exitEditMode = function () {
+    _editActive = false;
+    _editFinishTextEdit();
+    if (_editHoverOverlay) _editHoverOverlay.style.display = 'none';
+    if (_editSelectedOverlay) _editSelectedOverlay.style.display = 'none';
+    // Restore the body's original cursor instead of blank-clearing it,
+    // so a source-set cursor (e.g. inline style="cursor:pointer")
+    // survives an edit session.
+    document.body.style.cursor = _editOriginalBodyCursor || '';
+    _editOriginalBodyCursor = null;
+    _editSelected = [];
+    _knobsSaved = [];
+  };
+
+  window.__textEditFinish = function () { _editFinishTextEdit(); };
+
+  // Returns all text-edit changes made during this edit session as a
+  // JSON array of {selector, originalText, newText}. Commits the
+  // currently-editing element first, so its change is included even
+  // if the user hasn't clicked away. Empty array string ("[]") when
+  // nothing has changed.
+  window.__textEditGetChange = function () {
+    _editFinishTextEdit();
+    return JSON.stringify(_editTextChanges.slice());
+  };
+
+  // ── HTML serialize (used for static-page text writes) ────────────────
+  window.__serializeDocument = function () {
+    // Snapshot then strip edit-mode DOM artifacts. Restore in document
+    // order using pre-captured child indices so adjacent injected siblings
+    // don't reorder.
+    var strip = Array.from(document.querySelectorAll(
+      'script[data-designer2-injected], [data-designer2-overlay]'
+    ));
+    var positions = strip.map(function (el) {
+      return {
+        node: el,
+        parent: el.parentNode,
+        index: Array.prototype.indexOf.call(el.parentNode.children, el),
+      };
+    });
+    // Temporarily clear edit chrome on the text-editing element so the
+    // saved HTML doesn't include the purple outline / contenteditable.
+    var te = _editTextCurrentEl;
+    var saveOutline = null, saveOffset = null, saveCE = null;
+    if (te) {
+      saveCE = te.hasAttribute('contenteditable')
+        ? te.getAttribute('contenteditable') : null;
+      saveOutline = te.style.outline;
+      saveOffset = te.style.outlineOffset;
+      if (_editTextOriginalCE == null) te.removeAttribute('contenteditable');
+      else te.setAttribute('contenteditable', _editTextOriginalCE);
+      te.style.outline = _editTextOriginalOutline || '';
+      te.style.outlineOffset = _editTextOriginalOutlineOffset || '';
+    }
+    // Strip body cursor (crosshair during edit mode).
+    var saveCursor = document.body.style.cursor;
+    if (_editActive) document.body.style.cursor = '';
+    // Strip data-cc-id stamps (runtime handles, not source markup).
+    var ccEls = document.querySelectorAll('[data-cc-id]');
+    var ccSaved = [];
+    ccEls.forEach(function (el) {
+      ccSaved.push({ el: el, val: el.getAttribute('data-cc-id') });
+      el.removeAttribute('data-cc-id');
+    });
+    strip.forEach(function (el) { el.parentNode.removeChild(el); });
+    var html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    // Restore in forward order using captured indices.
+    for (var i = 0; i < positions.length; i++) {
+      var p = positions[i];
+      var children = p.parent.children;
+      if (p.index >= children.length) p.parent.appendChild(p.node);
+      else p.parent.insertBefore(p.node, children[p.index]);
+    }
+    ccSaved.forEach(function (s) {
+      try { s.el.setAttribute('data-cc-id', s.val); } catch (e) {}
+    });
+    if (te) {
+      if (saveCE == null) te.removeAttribute('contenteditable');
+      else te.setAttribute('contenteditable', saveCE);
+      te.style.outline = saveOutline;
+      te.style.outlineOffset = saveOffset;
+    }
+    if (_editActive) document.body.style.cursor = saveCursor;
+    return html;
+  };
+
+  // ── Babel JSX auto-config ───────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function () {
+    document
+      .querySelectorAll('script[type="text/babel"],script[type="text/jsx"]')
+      .forEach(function (s, i) {
+        var plugins = s.getAttribute('data-plugins') || '';
+        var srcPlugin = 'transform-react-jsx-source';
+        if (plugins.indexOf(srcPlugin) < 0) {
+          s.setAttribute('data-plugins', plugins ? plugins + ',' + srcPlugin : srcPlugin);
+        }
+        if (!s.hasAttribute('data-filename')) {
+          s.setAttribute('data-filename', s.getAttribute('src') || 'inline-' + i);
+        }
+      });
+  });
+
+})();
+
+</script></body>
+</html>
